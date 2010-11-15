@@ -1,0 +1,178 @@
+#!/bin/csh -f 
+
+if ( `hostname` == "tahoe.csc.calpoly.edu" || `hostname` == "lagniappe.csc.calpoly.edu" ) then
+  set lib=/home/pnico/CalPoly/Class/cpe357/f05/Asgn/Handin/lib/Asgn3
+  set logprog=echo 
+  set longlines=/home/pnico/bin/longlines.pl
+else
+  set lib=/home/pn-cs357/lib/asgn3/
+  set logprog=/home/pn-cs357/bin/logit.asgn3
+  set longlines=/home/pn-cs357/bin/longlines.pl
+endif
+
+set testdir=$lib/Tests/`uname -s`/inputs
+set asgn=Asgn3
+set exitstatus = 0
+onintr bail
+
+if ( $exitstatus == 0 ) then
+  echo ""
+  echo "------------------------"
+  echo "Looking for source files"
+  echo "------------------------"
+  echo ""
+#set verbose
+
+  set nonomatch
+  set src = ( *.[ch] )
+  if ( "$src" != '*.[ch]' ) then
+
+    echo "Found: $src"
+  else
+    echo "***** No C source files found. " 
+    echo "***** Are you sure you're in the right directory?"
+    echo ""
+    set exitstatus = -1
+  endif
+
+#unset verbose
+endif
+
+if ( $exitstatus == 0 ) then
+  echo ""
+  echo "-----------------------"
+  echo "Looking for a Makefile"
+  echo "----------------------"
+  echo ""
+
+  if ( $exitstatus == 0 ) then
+    if ( -f Makefile ) then
+      echo "Found: Makefile"
+    else if ( -f makefile ) then 
+      echo "Found: makefile"
+    else 
+      echo ""
+      echo "***** No Makefile found."
+      echo ""
+      set exitstatus = -2
+    endif
+  endif
+endif
+
+if ( $exitstatus == 0 ) then
+  echo ""
+  echo "--------------------------------"
+  echo "Checking for long lines (no program should have any lines > 80 chars)"
+  echo "--------------------------------"
+  echo ""
+  if ( ! { $longlines $src } ) then
+     set exitstatus=-3
+  else
+     echo "Line length ok."
+  endif
+  echo ""
+endif
+
+if ( $exitstatus == 0 ) then
+  echo ""
+  echo "------------------------------------"
+  echo "Building the application:" \"make all\"
+  echo "------------------------------------"
+  echo ""
+
+  set cmd = ( make all )
+  echo "$cmd" 
+  if ( ! { $cmd  } ) then
+    echo ""
+    echo "Unable to compile hencode and hdecode."
+    set exitstatus = -4
+  endif
+endif
+
+if ( $exitstatus == 0 ) then
+  echo ""
+  echo "---------------"
+  echo "checking for hencode and hdecode"
+  echo "---------------"
+  echo ""
+
+  if ( ! -f hencode ) then
+    echo "program hencode not found"
+    set exitstatus = -5
+  endif
+  if ( ! -f hdecode ) then
+    echo "program hdecode not found"
+    set exitstatus = -5
+  endif
+endif
+
+set which = 0
+
+if ( $exitstatus == 0 ) then
+  echo ""
+  echo "--------------------------------------------------------"
+  echo "Test Results:"
+  echo "   These are the results of trying your hencode and hdecode"   
+  echo "against several input files with different characteristics "     
+  echo "described by the filename.  The output of your program"
+  echo "is compared to a reference output using diff(1).  If they"
+  echo "differ, the test case is a failure."
+  echo ""
+  echo "  The testfiles are located in $testdir/."
+  echo ""
+  echo ""
+
+  set this  = 1
+  foreach app ( hencode hdecode ) 
+    echo ""
+    echo ""
+    echo "--------------------------------"
+    echo "Running $app "
+    echo "--------------------------------"
+    echo ""
+    echo ""
+
+    set expdir=$testdir:h/outputs/$app
+
+    foreach input ( $testdir/$app/* ) 
+       echo -n "        "$input:t"..."               
+       set exp=$expdir/$input:t.expected
+       if ( ! -f $exp ) then
+    	 set exitstatus=-6
+    	 break
+       endif
+       ./$app $input output$$ 
+       if ( { ( diff output$$ $exp > /dev/null ) } ) then 
+           echo "ok."                                
+       else                                                  
+           echo "FAILURE."                           
+           @ exitstatus++;
+    	   @ which += $this
+       endif
+       @ this *= 2
+       rm -f output$$;                     
+    end
+
+    echo ""
+    echo "--------------------------------------------------------"
+    echo ""
+  end
+endif
+
+if ( ! $exitstatus ) then
+  echo "Passed all tests."
+else
+  echo "FAILED."
+endif
+
+goto done
+
+bail:
+  echo "Interrupted."
+  rm -f output$$
+  set exitstatus=-7
+
+done:
+
+$logprog  $exitstatus $which
+exit $exitstatus
