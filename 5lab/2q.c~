@@ -1,0 +1,36 @@
+#include <stdio.h>
+
+#define nonce(x) x-x
+#define div(x,y) (x/y)
+
+int twice (int x);
+
+int main () {
+    int x =2; 
+    int y =3;
+    int x2 =2;
+    int x3 =2;
+    int y2 =3;
+    int y3 =3;
+    printf("%f\n", div(1, 2.0));
+/* This is 0.5 because of the 2.0 being a floating number not an
+ * integer since it has the '.o' at the end. This changes it to 
+ * a  floating point division
+ */
+    x2 = twice(x2);
+    y2 = nonce(y2);
+    printf("nonce is %f and twice is %f\n", x2, y2);
+   /* printf("twice of nonce is %f and nonce of twice is %f\n",
+            twice(nonce(y3)), nonce(twice(x3)));
+    printf("%f\n", div(twice(nonce(y)), nonce(twice(x))));*/
+/* If you expand this out it would look like:
+ * div(twice(x-x),nonce(x+x) then
+ * div( 
+ */
+return 0;
+}
+
+
+int twice (int x) {
+ return x + x;
+}

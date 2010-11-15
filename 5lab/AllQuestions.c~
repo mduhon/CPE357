@@ -1,0 +1,77 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct node_st {
+    int data;
+    struct node_st *next;
+};
+
+struct node_st *sorted_insert_list(int num, struct node_st *list);
+char * mystrstr(char *haystack, char *needle);
+int twice (int x);
+
+int main () {
+   char * word;
+    int x =2; 
+    int y =3;
+    int A = 2;
+    int B = 3;
+    char *cp = "abcdef";
+    int grade[6] = {4, 3, 2, 1, 0, -1};
+
+
+   printf("%d\n", &grade[3] - &grade[2]);
+/* This is because the size of an int is 4 and when you subtract
+ * it it is 4 bytes away which is 1
+ * */ 
+ 
+ printf("%d\n", strlen((char*)(&grade[3])));
+/* This answer depends upon if the machine is a big endian or
+ * little endian mahcine. 
+ */
+ 
+ 
+ 
+    printf("%f\n", div(1, 2.0));
+/* This is 0.5 because of the 2.0 being a floating number not an
+ * integer since it has the '.o' at the end. This changes it to 
+ * a  floating point division
+ */
+ 
+  printf("%d\n", div(twice(nonce(y)), nonce(twice(x))));
+/* If you expand this out it would look like:
+ * div(twice(x-x),nonce(x+x) then
+ * twice(y-y)/twice(x) - twice(x)
+ */
+    
+    
+    word =  mystrstr("racecar", "car");
+    if (word)
+        printf("%s\n",word); 
+    word =  mystrstr("racecar", "");
+    if (word)
+        printf("%s\n", word); 
+    word =  mystrstr("superlongwordwithac", "car");
+    if (word)
+        printf("%s\n", word); 
+    word =  mystrstr("racecarcar", "car");
+    if (word)
+        printf("%s\n", word); 
+        
+        
+    struct node_st * test;
+    test = NULL;
+    test = sorted_insert_list(5, test);
+    test = sorted_insert_list(8, test);
+    test = sorted_insert_list(3, test);
+    test = sorted_insert_list(1, test);
+    test = sorted_insert_list(6, test);
+    test = sorted_insert_list(0, test);
+
+    while(test->next) {
+        printf("Num is %d\n", test->data);
+        test = test->next;
+    }
+    return 0;
+}
