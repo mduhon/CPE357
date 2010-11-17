@@ -28,7 +28,7 @@ typedef struct {
     char prefix [155];
 } header;
 
-header *readHeader(int inFile);
+header *readHeader(int inFile, int *outFile);
 int copyInfo(int size, int from, int to);
 
 
@@ -49,49 +49,25 @@ int outFile, inFile;
 
     dircurr = opendir(".");
     curr_dir = readdir(dircurr);
-    while((head = readHeader(inFile))) {
-        if(!head->size)
+    stat(curr_dir->d_name, &curr_st);
+    while((head = readHeader(inFile, &outFile))) {
+        if(!head->size) {
+            chdir(head->name);
             continue;
-        head->name[strlen(head->name)] = '5';
-        if((outFile = open(head->name, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) < 0) {
-            perror("open");
-            exit(3);
         }
-
+        head->name[strlen(head->name)] = '5';
+        
 
         copyInfo(((head->size/512)+1), inFile, outFile);
         close(outFile);
         free(head);
     }
-/*    head = readHeader(inFile);
-    head->name[strlen(head->name)] = '5';
-    if((outFile = open(head->name, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) < 0) {
-        perror("open");
-        exit(3);
-    }
-
-
-    copyInfo(((head->size/512)+1), inFile, outFile);
-    close(outFile);
-    free(head);
-
-    head = readHeader(inFile);
-    head->name[strlen(head->name)] = '5';
-    if((outFile = open(head->name, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) < 0) {
-        perror("open");
-        exit(3);
-    }
-
-
-    copyInfo(((head->size/512)+1), inFile, outFile);
-
-    free(head);*/
     close(inFile);
     close(outFile);
 
     return 0;
 }
-header *readHeader(int inFile) {
+header *readHeader(int inFile, int * outFile) {
     header * head;
     head = malloc(sizeof(header));
     if(!head) {
@@ -117,6 +93,11 @@ header *readHeader(int inFile) {
     read(inFile, head->prefix, sizeof(head->prefix));
     read(inFile, head->pad, sizeof(head->pad));
 
+
+    if((*outFile = open(head->name, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) < 0) {
+        perror("open");
+        exit(3);
+    }
     return head;
 }
 
