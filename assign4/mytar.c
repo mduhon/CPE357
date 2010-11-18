@@ -1,3 +1,9 @@
+/* 
+ * Mathew Duhon
+ * mytar.c
+ * 
+ */
+
 #include <string.h>
 #include <dirent.h>
 #include <ctype.h>
@@ -55,7 +61,6 @@ int outFile, inFile;
             chdir(head->name);
             continue;
         }
-        head->name[strlen(head->name)] = '5';
         
 
         copyInfo(((head->size/512)+1), inFile, outFile);
@@ -67,8 +72,15 @@ int outFile, inFile;
 
     return 0;
 }
+
+/*
+ * this reads in the header and creates the file if it should 
+ * be made
+ */
+
 header *readHeader(int inFile, int * outFile) {
     header * head;
+    struct stat new_st;
     head = malloc(sizeof(header));
     if(!head) {
         perror("readHeader");
@@ -93,17 +105,26 @@ header *readHeader(int inFile, int * outFile) {
     read(inFile, head->prefix, sizeof(head->prefix));
     read(inFile, head->pad, sizeof(head->pad));
 
+    if(head->size == 0) {
+        return NULL;
+    }
 
+    head->name[strlen(head->name)] = '5';
     if((*outFile = open(head->name, O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO)) < 0) {
         perror("open");
         exit(3);
     }
+    stat(head->name, &new_st);
+    new_st.st_mtime = strtol(head->mtime, NULL, 12);
     return head;
 }
 
 
 
-
+/*
+ * this copys the info from the .tar file to the 
+ * newly created file
+ */
 int copyInfo(int size, int from, int to) {
     int x, y;
     unsigned char block[512];
