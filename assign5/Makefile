@@ -4,10 +4,10 @@ CFLAGS = -Wall -g
 
 LDFLAGS =
 
-TARGET = mytar
+TARGET = parseline
 
 
-SRC = mytar.c 
+SRC = parseline.c 
 
 HEADERS =  
 
@@ -18,9 +18,9 @@ all: $(clean) $(TARGET)
 allclean: clean
 	@rm -f $(EXTRACLEAN) 
 clean:
-	rm -f $(TARGET) mytar.c1
+	rm -f $(TARGET) 
 
-$(TARGET): mytar.c 
+$(TARGET): parseline.c 
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(SRC)
 
 			   
