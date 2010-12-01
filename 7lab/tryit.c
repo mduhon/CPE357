@@ -18,7 +18,7 @@ int status;
     child = fork();
     if(child == 0) {
         child = getpid();
-        if(execlp(argv[1], NULL)  == -1) {
+        if(execl(argv[1],argv[1], NULL)  == -1) {
             perror("exec");
         }
     } else { 
