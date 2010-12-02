@@ -19,7 +19,7 @@ typedef struct Stage{
 
 } stage;
 
-void parse(stage * head);
+stage * parse(stage * head);
 void printStages(stage * head);
 stage * makeStages(stage * head, char * line);
 
@@ -28,13 +28,13 @@ int main (int argc, char * argv[]) {
 
     head = NULL;
     fprintf(stdout,"line: ");
-    parse(head);
+    head = parse(head);
     printStages(head);
     return 0;
 }
 
 
-void parse(stage * head) {
+stage * parse(stage * head) {
     char *line, *tok;
     char **buf;
 
@@ -49,18 +49,20 @@ void parse(stage * head) {
     tok = line;
     
     while((tok = strsep(buf, "|"))) {
-        makeStages(head, tok);       
+        head = makeStages(head, tok);       
     }
-    
+   return head; 
 }
 
 stage * makeStages(stage * head, char * line){
     stage * last, * trav;
-    char *tok, **buf;
+    char *tok, **buf, temp [2];
     char in[] = "original stdin";
     char out[] = "original stdout";
-    char stage[] = "pipe to stage ";
+    char stageTo[] = "pipe to stage ";
+    char stageFrom[] = "pipe from stage ";
     int x;
+    static int to = 0, from = 0;
     static int curStage = 0;
 
     if(head == NULL) {
@@ -69,19 +71,24 @@ stage * makeStages(stage * head, char * line){
             perror("malloc");
             exit(1);
         }
-    }
-    trav = head;
-    while(trav->next){
+        last = NULL;
+        trav = head;
+    } else {
+        trav = head;
+        while(trav->next){
+            trav = trav->next;
+        }
+        last = trav;
         trav = trav->next;
-    }
-    last = trav;
-    trav = trav->next;
-    trav = malloc(sizeof(*trav));
+        trav = malloc(sizeof(*trav));
 
-    if(!trav) {
-        perror("malloc");
-        exit(1);
+        if(!trav) {
+            perror("malloc");
+            exit(1);
+        }
     }
+    
+    
     if(line[strlen(line)-1] == '\n') {
         line[strlen(line)-1] = '\0';
     }
@@ -89,11 +96,16 @@ stage * makeStages(stage * head, char * line){
     if(!last) {
         strcpy(trav->input, in);
     } else {
-        strcpy(trav->input, stage);
-        strcpy(last->output, stage);
-        strcat(trav->input, ((char *) curStage));
-        strcat(last->output, ((char *) (curStage+1)));
+        strcpy(trav->input, stageFrom);
+        sprintf(temp, "%d", curStage-1);
+        strcat(trav->input, temp);
+        if(last) {
+            strcpy(last->output, stageTo);
+            sprintf(temp, "%d", curStage); 
+            strcat(last->output, temp);
+        }
 
+        last->next = trav;
     }
     strcpy(trav->output, out);
     strcpy(trav->line, line);
@@ -101,16 +113,33 @@ stage * makeStages(stage * head, char * line){
     tok = line;
     x = 0;
     while((tok = strsep(buf, " "))) {
+        if(strlen(tok) == 0) {
+            continue;
+        }
         if(*tok == '>') {
+            if(to) {
+                fprintf(stderr,"%s: bad input redirection\n", trav->argv[0]);
+                exit(1);
+            }
             tok = strsep(buf, " ");
             strcpy(trav->output, tok);
+            to = 1;
         } else if(*tok == '<') {
+            if(from) {
+                fprintf(stderr,"%s: bad input redirection\n", trav->argv[0]);
+                exit(1);
+            }
             tok = strsep(buf, " ");
             strcpy(trav->input, tok);
+            from = 1;
         } else {
-            strcpy(trav->argv[x++], tok);
+            trav->argv[x++] = tok;
         }
     } 
+    if(!trav->argv[0]) {
+         fprintf(stderr,"invalid null command\n");
+         exit(1);
+    }
     trav->numStage = curStage++;
     trav->argc = x;
     trav->next = NULL;
@@ -131,11 +160,12 @@ void printStages(stage * head) {
         printf("\t input: %s\n", trav->input);
         printf("\t output: %s\n", trav->output);
         printf("\t argc: %d\n", trav->argc);
-        printf("\t argv: \"%s\"", trav->argv[x]);
+        printf("\t argv: \"%s\"", trav->argv[0]);
         for(x = 1; trav->argv[x]; x++) {
             printf(",\"%s\"", trav->argv[x]);
         }
         trav = trav->next;
+        printf("\n");
     }
     printf("\n");
 
