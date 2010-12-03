@@ -4,12 +4,12 @@ CFLAGS = -Wall -g
 
 LDFLAGS =
 
-TARGET = parseline
+TARGET = mush
 
+SRC = mush.c 
+SRC2 = parseline.c 
 
-SRC = parseline.c 
-
-HEADERS =  
+HEADERS =  parseline.h
 
 EXTRACLEAN = $(TARGET) 
 
@@ -18,10 +18,10 @@ all: $(clean) $(TARGET)
 allclean: clean
 	@rm -f $(EXTRACLEAN) 
 clean:
-	rm -f $(TARGET) 
+	rm -f $(TARGET) $(TARGET2)
 
-$(TARGET): parseline.c 
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(SRC)
+$(TARGET): parseline.c mush.c 
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(SRC) $(SRC2)
 
 			   
 depend:
